@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
+	"strconv"
 	"strings"
 
 	"github.com/golang/glog"
@@ -41,13 +42,28 @@ func Sort(
 		comma = "$'\t'"
 	}
 
-	cmdStr := fmt.Sprintf(`sort --ignore-leading-blanks -t %s -k1 -o %s %s`,
-		comma, outFilepath, srcFilepath)
+	cmdStr := fmt.Sprintf(`sort --ignore-leading-blanks -t%s -k%s -o %s %s`,
+		comma, keysCmd(keys), outFilepath, srcFilepath)
 	if out, err := Exec(cmdStr); err != nil {
 		glog.Infof("Error[%s] while sorting files[%s] with output[%s]", err, srcFilepath, out)
 		return err
 	}
 	return nil
+}
+
+func keysCmd(keys []int) (cmd string) {
+	var keyCmds []string
+	for _, key := range keys {
+		if key < 0 {
+			keyCmds = append(keyCmds, strconv.Itoa(-key)+"r")
+		} else {
+			keyCmds = append(keyCmds, strconv.Itoa(-key))
+		}
+	}
+
+	cmd = strings.Join(keyCmds, ",")
+
+	return cmd
 }
 
 //http://www.ibm.com/developerworks/library/l-tiptex6/
